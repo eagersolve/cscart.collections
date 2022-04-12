@@ -21,9 +21,9 @@ var/tools/migration/composer.lock
 var/tools/migration/conf.php
 var/tools/migration/vendor
 
-var/cache
-var/cache/registry/lang_cache
-images/thumbnails
+var/cache/
+images/thumbnails/
+
 
 upgrades/*
 !upgrades/source_restore.php
