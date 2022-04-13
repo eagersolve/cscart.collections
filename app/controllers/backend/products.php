@@ -87,21 +87,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
     } elseif ($mode == 'delete_collection') {
-        fn_print_die($_REQUEST);
+        // fn_print_die($_REQUEST);
 
-        // $collection_id =!empty($_REQUEST['collection_id']) ? $_REQUEST['collection_id'] : 0;
-        // fn_delete_collection($collection_id);
-        // $suffix = ".manage_collections";
+        $collection_id =!empty($_REQUEST['collection_id']) ? $_REQUEST['collection_id'] : 0;
+        fn_delete_collection($collection_id);
+        $suffix = ".manage_collections";
 
     } 
          elseif ($mode == 'delete_collections') {
-            fn_print_die($_REQUEST);
-    //     if (!empty($_REQUEST['collections_ids'])) {
-    //     foreach ($_REQUEST['collections_ids'] as $collection_id){
-    //         fn_delete_collection($collection_id);
-    //         }
-    //     }
-    //     $suffix = ".manage_collections";
+            // fn_print_die($_REQUEST);
+        if (!empty($_REQUEST['collections_ids'])) {
+        foreach ($_REQUEST['collections_ids'] as $collection_id){
+            fn_delete_collection($collection_id);
+            }
+        }
+        $suffix = ".manage_collections";
     }
 
 
@@ -1572,3 +1572,17 @@ function fn_update_collection($data, $collection_id, $lang_code = DESCR_SL)
     
     return $collection_id;
 }
+
+function fn_delete_collection($collection_id)
+{
+    if (!empty($collection_id)) {
+        $res = db_query("DELETE FROM ?:collections WHERE collection_id = ?i", $collection_id);
+        db_query("DELETE FROM ?:collection_descriptions WHERE collection_id = ?i", $collection_id);
+        // fn_collection_delete_links($collection_id);
+    }
+}
+//     function fn_collection_delete_links($collection_id)
+// {
+//     db_query("DELETE FROM ?:collection_links WHERE collection_id = ?i", $collection_id);
+
+// }
