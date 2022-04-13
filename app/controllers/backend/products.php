@@ -1383,6 +1383,85 @@ if ($mode === 'add') {
     ];
 } elseif ($mode == 'add_collection' || $mode == 'update_collection') {
     // fn_print_die('hey');
-} elseif ($mode == 'manage_collection') {
-    fn_print_die('hey');
+} elseif ($mode == 'manage_collections' ) {
+
+    list($collections, $search) = fn_get_collections($_REQUEST, Registry::get('settings.Appearance.admin_elements_per_page'), DESCR_SL);
+    // fn_print_die($collections);
+
+
+    Tygh::$app['view']->assign('collections', $collections);
+    Tygh::$app['view']->assign('search', $search);
+}
+
+function fn_get_collections($params = [], $items_per_page = 0, $lang_code = CART_LANGUAGE)
+{
+    // Set default values to input params
+    $default_params = array(
+        'page' => 1,
+        'items_per_page' => $items_per_page
+    );
+
+    $params = array_merge($default_params, $params);
+
+    if (AREA == 'C') {
+        $params['status'] = 'A';
+    }
+
+    $sortings = array(
+        'position' => '?:collections.position',
+        'timestamp' => '?:collections.timestamp',
+        'name' => '?:collection_descriptions.collection',
+        'status' => '?:collections.status',
+    );
+
+    $condition = $limit = $join = '';
+
+    if (!empty($params['limit'])) {
+        $limit = db_quote(' LIMIT 0, ?i', $params['limit']);
+    }
+
+    $sorting = db_sort($params, $sortings, 'name', 'asc');
+
+  
+    if (!empty($params['item_ids'])) {
+        $condition .= db_quote(' AND ?:collections.collection_id IN (?n)', explode(',', $params['item_ids']));
+    }
+
+    if (!empty($params['collection_id'])) {
+        $condition .= db_quote(' AND ?:collections.collection_id = ?i', $params['collection_id']);
+    }
+
+
+
+    if (!empty($params['status'])) {
+        $condition .= db_quote(' AND ?:collections.status = ?s', $params['status']);
+    }
+
+    $fields = array (
+        '?:collections.*',
+        '?:collection_descriptions.collection',
+        '?:collection_descriptions.description',
+    );
+
+    $join .= db_quote(' LEFT JOIN ?:collection_descriptions ON ?:collection_descriptions.collection_id = ?:collections.collection_id AND ?:collection_descriptions.lang_code = ?s', $lang_code);
+
+    if (!empty($params['items_per_page'])) {
+        $params['total_items'] = db_get_field("SELECT COUNT(*) FROM ?:collections $join WHERE 1 $condition");
+        $limit = db_paginate($params['page'], $params['items_per_page'], $params['total_items']);
+    }
+
+    $collections = db_get_hash_array(
+        "SELECT ?p FROM ?:collections " .
+        $join .
+        "WHERE 1 ?p ?p ?p",
+        'collection_id', implode(', ', $fields), $condition, $sorting, $limit
+    );
+
+    // $collection_image_ids = array_keys($collections);
+    // $images = fn_get_image_pairs($collection_image_ids, 'collection', 'M', true, false, $lang_code);
+
+    // foreach ($collections as $collection_id => $collection) {
+    //     $collections[$collection_id]['main_pair'] = !empty($images[$collection_id]) ? reset($images[$collection_id]) : array();
+    // } 
+    return array($collections, $params); 
 }
